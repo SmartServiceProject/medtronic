@@ -1,18 +1,15 @@
-load("C:/Users/chris/Desktop/Master BISS UM/sem2per1_Smart Service Project/Data/Workspace DataPrep.RData")
-
-## test 
-
+setwd("C:/University/Uni Maastricht/Smart Service  Project/Data Analysis")
 require(data.table)
 require(dplyr)
 require(lubridate)
-load("Workspace DataPrep.RData")
-save.image("Workspace DataPrep.RData")
+#load("Workspace DataPrep.RData")
+#save.image("Workspace DataPrep.RData")
 
 #### Build Dataframes #### 
 
 #field_list <- fread('Alphabetical_Field_List.csv')
-#installed_base <- fread('Installed_Based.csv',header = T)
-#service_notification <- fread('Service_Notification_Data.csv',header = T)
+installed_base <- fread('Installed_Based.csv',header = T)
+service_notification <- fread('Service_Notification_Data.csv',header = T)
 service_order <- fread('Service_Order_History.csv', header= T)
 
 installed_base$V1 <- NULL
@@ -22,11 +19,12 @@ service_order$V1 <- NULL
 #### installed_based_df #### 
 
 #equipment statuses as T/F
-installed_base$`Equipment Status Delivery Note` <- ifelse(installed_base$`Equipment Status Delivery Note`=='X',1,0)
-installed_base$`Equipment Status Customer Site` <- ifelse(installed_base$`Equipment Status Customer Site`=='X',1,0)
-installed_base$`Equipment Status Available` <- ifelse(installed_base$`Equipment Status Available`=='X',1,0)
-installed_base$`Equipment Status Warehouse` <- ifelse(installed_base$`Equipment Status Warehouse`=='X',1,0)
-installed_base$`Equipment Status Inactive` <- ifelse(installed_base$`Equipment Status Inactive`=='X',1,0)
+
+#installed_base$`Equipment Status Delivery Note` <- ifelse(installed_base$`Equipment Status Delivery Note`=='X',1,0)
+#installed_base$`Equipment Status Customer Site` <- ifelse(installed_base$`Equipment Status Customer Site`=='X',1,0)
+#installed_base$`Equipment Status Available` <- ifelse(installed_base$`Equipment Status Available`=='X',1,0)
+#installed_base$`Equipment Status Warehouse` <- ifelse(installed_base$`Equipment Status Warehouse`=='X',1,0)
+#installed_base$`Equipment Status Inactive` <- ifelse(installed_base$`Equipment Status Inactive`=='X',1,0)
 
 #date columns 
 installed_base$`Installation Date` <- as.Date(installed_base$`Installation Date`, "%m/%d/%Y")
@@ -43,15 +41,26 @@ installed_base$`Stock Status` <- as.factor(installed_base$`Stock Status`)
 #remove unnecessary columns
 installed_base$`Service Relevancy` <- NULL
 installed_base$`Stock Type`<- NULL
+installed_base$`Equipment Status Delivery Note` <- NULL
+installed_base$`Equipment Status Customer Site` <- NULL
+installed_base$`Equipment Status Available` <- NULL
+installed_base$`Equipment Status Warehouse` <- NULL
+installed_base$`Equipment Status Inactive` <- NULL
+installed_base$`Equipment Number` <- NULL
+
 
 #### service_order ####
+
+#remove unnecessary columns
+service_order$`Serial Number` <- NULL
+service_order$`Service Type` <- NULL
+
 
 #factorial columns
 service_order$`Service Order Type`<- as.factor(service_order$`Service Order Type`)
 service_order$`Maintenance Activity Type`<- as.factor(service_order$`Maintenance Activity Type`)
 service_order$`Notification Type`<- as.factor(service_order$`Notification Type`)
 service_order$`Sales Org`<- as.factor(service_order$`Sales Org`)
-service_order$`Service Type`<- as.factor(service_order$`Service Type`)
 service_order$`Service Location`<- as.factor(service_order$`Service Location`)
 service_order$`Maintenance Activity Type Description` <- as.factor(service_order$`Maintenance Activity Type Description`)
 
@@ -63,21 +72,38 @@ service_order$`Service Order Creation Date` <- as.Date(service_order$`Service Or
 
 #### service_notification_data ####
 
-service_notification$`Maintenance Plant`<- as.factor(service_notification$`Maintenance Plant`)
-service_notification$`Equipment Description`<- as.factor(service_notification$`Equipment Description`)
-service_notification$`Material Pricing Group Description`<- as.factor(service_notification$`Material Pricing Group Description`)
-service_notification$`Model Number`<- as.factor(service_notification$`Model Number`)
-service_notification$`Notification Damage Code 1 Description`<- as.factor(service_notification$`Notification Damage Code 1 Description`)
-service_notification$`Notification Damage Code 2 Description`<- as.factor(service_notification$`Notification Damage Code 2 Description`)
-service_notification$`Notification Damage Code 3 Description`<- as.factor(service_notification$`Notification Damage Code 3 Description`)
-service_notification$`Notification Cause Code 1 Description`<- as.factor(service_notification$`Notification Cause Code 1 Description`)
-service_notification$`Notification Cause Code 2 Description`<- as.factor(service_notification$`Notification Cause Code 2 Description`)
-service_notification$`Notification Cause Code 3 Description`<- as.factor(service_notification$`Notification Cause Code 3 Description`)
-service_notification$`Notification Number`<- as.factor(service_notification$`Notification Number`)
-service_notification$`Notification Type Description`<- as.factor(service_notification$`Notification Type Description`)
-service_notification$`Notification User Status Description`<- as.factor(service_notification$`Notification User Status Description`)
-service_notification$`Notification Work Center Description`<- as.factor(service_notification$`Notification Work Center Description`)
-service_notification$`Planning Plant Description`<- as.factor(service_notification$`Planning Plant Description`)
-service_notification$`Profit Center Description`<- as.factor(service_notification$`Profit Center Description`)
-service_notification$`Serial Number`<- as.factor(service_notification$`Serial Number`)
-service_notification$`Service Order Number`<- as.factor(service_notification$`Service Order Number`)
+#remove unnecessary columns
+service_notification$`Material Pricing Group`<- NULL
+service_notification$`Notification Damage Code 1`<- NULL
+service_notification$`Notification Damage Code 2`<- NULL
+service_notification$`Notification Damage Code 3`<- NULL
+service_notification$`Notification Cause Code 3`<- NULL
+service_notification$`Notification Cause Code 2`<- NULL
+service_notification$`Notification Cause Code 1`<- NULL
+
+service_notification$`Notification User Status`<- NULL
+service_notification$`Notification Work Center`<- NULL
+service_notification$`Planning Plant`<- NULL
+service_notification$`Profit Center` <- NULL
+service_notification$`Serial Number` <- NULL
+
+# date column 
+
+service_notification$`Notification Creation Date` <- as.Date(service_notification$`Notification Creation Date`, '%m/%d/%Y')
+
+
+
+# Count Service Orders by Equipment Number
+
+Count_SOs <- service_order %>% 
+  group_by(`Equipment Number`) %>%
+  summarise(count=n()) %>%
+  filter(count > 1)
+
+
+# Merge service notification and order 
+
+Services <- service_notification %>%
+  left_join(service_order, by ='Notification Number')
+
+days_between_Notification_ServiceOrder <- Services$`Notification Creation Date`-Services$`Service Order Creation Date`
