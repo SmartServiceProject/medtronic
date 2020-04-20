@@ -125,3 +125,49 @@ installed_base$lifetime <- (max(installed_base$LastServiceOrder, na.rm = TRUE) -
 installed_base <- installed_base %>% left_join(Count_SOs) 
 
 installed_base$SOperMonth <- installed_base$count / as.numeric(installed_base$lifetime) 
+
+# Select only the data where Installation Date is available 
+
+completecases <- installed_base[complete.cases(installed_base[,5]),]
+
+completecases <- filter(completecases, `Installation Date` > '1980-02-01')
+
+##delete duplicate columns
+Services$`Equipment Number.y` <- NULL
+Services$`Service Order Number.y` <- NULL
+Services$`Sold To.y` <- NULL
+Services$`Notification Type.y` <- NULL
+Services$`Model Number.y` <- NULL
+Services$`Material Number.y` <- NULL
+
+#renamed column for join
+names(Services)[names(Services) == "Equipment Number.x"] <- "Equipment Number"
+
+#join services and installed_base
+df <- Services %>%
+  left_join(completecases, by = 'Equipment Number')
+
+#delete duplicate columns in df
+df$`Equipment Description.y` <- NULL
+df$`Equipment Number.y` <- NULL
+df$`Service Order Number.y`<- NULL
+df$`Sold To.y` <- NULL
+df$`Notification Type.y` <- NULL
+df$`Model Number.y` <- NULL
+df$`Material Number.y` <- NULL
+
+##complete df for clustering
+df <- df[complete.cases(df[,40]),]
+
+#rename colums
+names(df)[names(df) == "Sold To.x"] <- "Sold To"
+names(df)[names(df) == "Equipment Description.x"] <- "Equipment Description"
+names(df)[names(df) == "Material Number.x"] <- "Material Number"
+names(df)[names(df) == "Model Number.x"] <- "Model Number"
+names(df)[names(df) == "Notification Type.x"] <- "Notification Type"
+names(df)[names(df) == "Service Order Number.x"] <- "Service Order Number"
+
+
+## Create Clustering df cl_df ##
+
+cl_df = df[ , c("Equipment Number", "Material Pricing Group Description", "Service Order Type", "Service Location", "Maintenance Activity Type", "Service Order Type", "Equipment Description", "SOperMonth")]
