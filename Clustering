@@ -1,0 +1,46 @@
+##clustering with daisy function a gower distance
+library(cluster)
+library (Rtsne)
+library(ggplot2)
+
+##sample of rows to experiment
+cl_df <- cl_df[,2:8]
+distances <- daisy(cl_df ,metric = "gower")
+
+#define optimal number of clusters
+avg_silhouette <- NA
+
+for(i in 2:5){
+  cluster1 <- pam(distances, diss = TRUE, k = i)
+  avg_silhouette[i] <- cluster1$silinfo$avg.width
+}
+
+plot(1:10, avg_silhouette, xlab ='total number of clusters',
+     ylab = 'average silhouette', bty = 'n')
+lines(1:10, avg_silhouette)
+
+#according to plot 2 cluster has the highest average silhouette, but not optimal for contracting purposes
+#5 clusters closest to avg silhouette of 2 , hence choose 5 as contract number
+
+'AB HIER ERGEBNISSE ABWARTEN JE NACH VARIABLEN'
+
+k <- 5
+final_cl <- pam(distances, diss = TRUE, k = k)
+pam_results <- sample_cl %>%
+  mutate(cluster = final_cl$clustering) %>%
+  group_by(cluster) %>%
+  do(the_summary = summary(.))
+
+pam_results$the_summary
+
+#visualize
+install.packages("Rtsne")
+tsne_obj <- Rtsne(distances, is_distance = TRUE)
+
+tsne_data <- tsne_obj$Y %>%
+  data.frame() %>%
+  setNames(c("X", "Y")) %>%
+  mutate(cluster = factor(final_cl$clustering))
+
+ggplot(aes(x = X, y = Y), data = tsne_data) +
+  geom_point(aes(color = cluster))
