@@ -1,6 +1,9 @@
+setwd("C:/University/Uni Maastricht/Smart Service  Project/Data Analysis")
 require(data.table)
 require(dplyr)
 require(lubridate)
+
+
 #load("Workspace DataPrep.RData")
 #save.image("Workspace DataPrep.RData")
 
@@ -108,8 +111,6 @@ days_between_Notification_ServiceOrder <- Services$`Notification Creation Date`-
 
 # Create Table including installed base 
 
-#df <- Services %>% left_join()
-
 # Create Repairs/Notifications per Month 
 
 "First retrieve last service order" 
@@ -119,12 +120,25 @@ LastServiceOrder <- Services %>%
   summarize(LastServiceOrder = max(`Service Order Creation Date`))
 
 installed_base <- installed_base %>% left_join(LastServiceOrder, by= c('Equipment Number' = 'Equipment Number.x'))
-
-installed_base$lifetime <- (max(installed_base$LastServiceOrder, na.rm = TRUE) - installed_base$`Installation Date`)/30
-
+installed_base$lifetime <- (max(installed_base$LastServiceOrder, na.rm = TRUE) - installed_base$`Installation Date`)/365
 installed_base <- installed_base %>% left_join(Count_SOs) 
+installed_base$SOperYear <- installed_base$count / as.numeric(installed_base$lifetime) 
 
-installed_base$SOperMonth <- installed_base$count / as.numeric(installed_base$lifetime) 
+
+# Retrieve unique materials and codes for repairs needed 
+
+UniqueMaterialsCodes <- Services %>% 
+  group_by(`Equipment Description`) %>%
+  summarize(uniqueMaterials = length(unique(`Material Description`)), 
+            uniqueCauseCode1 = length(unique(`Notification Cause Code 1 Description`)), 
+            uniqueCauseCode2 = length(unique(`Notification Cause Code 2 Description`)), 
+            uniqueCauseCode3 = length(unique(`Notification Cause Code 3 Description`)),
+            RepairComplexity = sum(uniqueMaterials, uniqueCauseCode1, uniqueCauseCode2, uniqueCauseCode3))
+
+# Create complexity df 
+
+RepairComplexity <- UniqueMaterialsCodes %>% select("Equipment Description", "RepairComplexity") 
+
 
 # Select only the data where Installation Date is available 
 
@@ -169,5 +183,12 @@ names(df)[names(df) == "Service Order Number.x"] <- "Service Order Number"
 
 
 ## Create Clustering df cl_df ##
+cl_df = df[ , c("Equipment Number", "Material Pricing Group Description", "Service Order Type", "Service Location", "Maintenance Activity Type", "Equipment Description", "SOperYear")]
 
-cl_df = df[ , c("Equipment Number", "Material Pricing Group Description", "Service Order Type", "Service Location", "Maintenance Activity Type", "Service Order Type", "Equipment Description", "SOperMonth")]
+'Bind complexity information'
+
+cl_df <- cl_df %>% left_join(RepairComplexity, by = 'Equipment Description')
+
+cl_df$`Equipment Number` <- as.factor(cl_df$`Equipment Number`)
+cl_df$`Material Pricing Group Description` <- as.factor(cl_df$`Material Pricing Group Description`)
+cl_df$`Equipment Description` <- as.factor(cl_df$`Equipment Description`)
