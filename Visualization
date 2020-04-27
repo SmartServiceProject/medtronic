@@ -1,0 +1,16 @@
+#clusters attached to df
+cl_df$cluster <- final_cl$clustering
+
+#vis all cluster with repaircomplexity
+visloc <- ggplot(cl_df, aes(y = `Service Location`, x = RepairComplexity, color = cluster)) + geom_point()
+visprice <- ggplot(cl_df, aes(y= `Material Pricing Group Description`, x = RepairComplexity, color = cluster)) + geom_point()
+visordertype <- ggplot(cl_df, aes(y= `Service Order Type`, x = RepairComplexity, color = cluster)) + geom_point()
+vismainten <- ggplot(cl_df, aes(y= `Maintenance Activity Type`, x = RepairComplexity, color = cluster)) + geom_point()
+visdescr <- ggplot(cl_df, aes(y= `Equipment Description`, x = RepairComplexity, color = cluster)) + geom_point()
+
+#vis all cluster with SOperyear
+vislocs <- ggplot(cl_df, aes(y = `Service Location`, x = SOperYear, colour = cluster)) + geom_point()
+visprices <- ggplot(cl_df, aes(y= `Material Pricing Group Description`, x = SOperYear, color = cluster)) + geom_point()
+visordertypes <- ggplot(cl_df, aes(y= `Service Order Type`, x = SOperYear, color = cluster)) + geom_point()
+vismaintens <- ggplot(cl_df, aes(y= `Maintenance Activity Type`, x = SOperYear, color = cluster)) + geom_point()
+visdescrs <- ggplot(cl_df, aes(y= `Equipment Description`, x = SOperYear, color = cluster)) + geom_point()
